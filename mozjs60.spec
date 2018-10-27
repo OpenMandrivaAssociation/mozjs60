@@ -111,7 +111,7 @@ rm -f %{buildroot}%{_libdir}/*.a %{buildroot}%{_bindir}/js*
 
 # Install files, not symlinks to build directory
 pushd %{buildroot}%{_includedir}
-    for link in "$(find . -type l)"; do
+    for link in $(find . -type l); do
 	header="$(readlink $link)"
 	rm -f $link
 	cp -p $header $link
