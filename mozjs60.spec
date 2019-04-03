@@ -15,7 +15,6 @@ Source0:	http://ftp.gnome.org/pub/GNOME/teams/releng/tarballs-needing-help/mozjs
 Source10:	http://ftp.gnu.org/gnu/autoconf/autoconf-2.13.tar.gz
 Patch0:		mozjs-52.8.1-fix-crash-on-startup.patch
 Patch1:		firefox-60.2.2-add-riscv64.patch
-Patch2:		fix-soname.patch 
 BuildRequires:	pkgconfig(icu-i18n)
 BuildRequires:	pkgconfig(nspr)
 BuildRequires:	pkgconfig(libffi)
