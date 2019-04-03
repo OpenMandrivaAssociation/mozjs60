@@ -13,7 +13,9 @@ License:	MPLv2.0 and BSD and GPLv2+ and GPLv3+ and LGPLv2.1 and LGPLv2.1+
 URL:		https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Releases/%{major}
 Source0:	http://ftp.gnome.org/pub/GNOME/teams/releng/tarballs-needing-help/mozjs/mozjs-%{version}.tar.bz2
 Source10:	http://ftp.gnu.org/gnu/autoconf/autoconf-2.13.tar.gz
-Patch1:		mozjs-52.8.1-fix-crash-on-startup.patch
+Patch0:		mozjs-52.8.1-fix-crash-on-startup.patch
+Patch1:		firefox-60.2.2-add-riscv64.patch
+Patch2:		fix-soname.patch 
 BuildRequires:	pkgconfig(icu-i18n)
 BuildRequires:	pkgconfig(nspr)
 BuildRequires:	pkgconfig(libffi)
@@ -51,6 +53,7 @@ you will need to install %{name}-devel.
 
 %prep
 %autosetup -p1 -n mozjs-%{version} -a 10
+%config_update
 
 #rm -rf nsprpub
 #cd config/external/
