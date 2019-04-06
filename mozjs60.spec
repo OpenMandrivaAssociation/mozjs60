@@ -72,11 +72,11 @@ cd autoconf-2.13
 %build
 # Need -fpermissive due to some macros using nullptr as bool false
 export AUTOCONF="`pwd`"/ac213bin/bin/autoconf
-export CFLAGS="%{optflags} -fpermissive -fPIC -fuse-ld=bfd"
+export CFLAGS="%{optflags} -fuse-ld=bfd"
 export CXXFLAGS="$CFLAGS"
 export LDFLAGS="$CFLAGS"
-export CC=gcc
-export CXX=g++
+export CC=%{__cc}
+export CXX=%{__cxx}
 export LD=ld.bfd
 
 # Kind of, but not 100%, like autoconf...
