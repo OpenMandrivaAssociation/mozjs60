@@ -5,16 +5,20 @@
 %define libmozjs_devel %mklibname %{pkgname} %{api} -d
 %define major %(echo %{version} |cut -d. -f1)
 
+# (tpg) optimize a bit
+%global optflags %{optflags} -O3
+
 Summary:	JavaScript interpreter and libraries
 Name:		mozjs60
 Version:	60.1.0
-Release:	3
+Release:	4
 License:	MPLv2.0 and BSD and GPLv2+ and GPLv3+ and LGPLv2.1 and LGPLv2.1+
 URL:		https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Releases/%{major}
 Source0:	http://ftp.gnome.org/pub/GNOME/teams/releng/tarballs-needing-help/mozjs/mozjs-%{version}.tar.bz2
 Source10:	http://ftp.gnu.org/gnu/autoconf/autoconf-2.13.tar.gz
 Patch0:		mozjs-52.8.1-fix-crash-on-startup.patch
 Patch1:		firefox-60.2.2-add-riscv64.patch
+Patch2:		trim.patch
 BuildRequires:	pkgconfig(icu-i18n)
 BuildRequires:	pkgconfig(nspr)
 BuildRequires:	pkgconfig(libffi)
@@ -70,6 +74,7 @@ cd autoconf-2.13
 %make install
 
 %build
+%setup_compile_flags
 # Need -fpermissive due to some macros using nullptr as bool false
 export AUTOCONF="`pwd`"/ac213bin/bin/autoconf
 export CFLAGS="%{optflags} -fuse-ld=bfd"
@@ -86,9 +91,11 @@ cd build1
 	--prefix=%{_prefix} \
 	--libdir=%{_libdir} \
 	--disable-readline \
+	--disable-debug \
+	--disable-debug-symbols \
 	--enable-shared-js \
 	--enable-posix-nspr-emulation \
-	--disable-optimize \
+	--enable-optimize="-O3" \
 	--disable-jemalloc \
 	--without-intl-api \
 	--with-system-bz2 \
