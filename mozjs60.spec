@@ -1,24 +1,50 @@
 %global pre_release %{nil}
 %define pkgname mozjs
-%define api 60.1
-%define libmozjs %mklibname %{pkgname} %{api}
+%define api 60
+%define major 60
+%define majorlib 0
+%define libmozjs %mklibname %{pkgname} %{api} %{major}
 %define libmozjs_devel %mklibname %{pkgname} %{api} -d
-%define major %(echo %{version} |cut -d. -f1)
 
 # (tpg) optimize a bit
 %global optflags %{optflags} -O3
 
+# Big endian platforms
+%ifarch ppc ppc64 s390 s390x
+%global big_endian 1
+%endif
+
 Summary:	JavaScript interpreter and libraries
 Name:		mozjs60
-Version:	60.1.0
-Release:	4
+Version:	60.6.3
+Release:	1
 License:	MPLv2.0 and BSD and GPLv2+ and GPLv3+ and LGPLv2.1 and LGPLv2.1+
 URL:		https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Releases/%{major}
-Source0:	http://ftp.gnome.org/pub/GNOME/teams/releng/tarballs-needing-help/mozjs/mozjs-%{version}.tar.bz2
+Source0:        https://ftp.mozilla.org/pub/firefox/releases/%{version}esr/source/firefox-%{version}esr.source.tar.xz
 Source10:	http://ftp.gnu.org/gnu/autoconf/autoconf-2.13.tar.gz
-Patch0:		mozjs-52.8.1-fix-crash-on-startup.patch
-Patch1:		firefox-60.2.2-add-riscv64.patch
-Patch2:		trim.patch
+# Patches from Debian mozjs52_52.3.1-4.debian.tar.xz:
+Patch0001:      fix-soname.patch
+Patch0002:      copy-headers.patch
+Patch0003:      tests-increase-timeout.patch
+Patch0008:      Always-use-the-equivalent-year-to-determine-the-time-zone.patch
+Patch0009:      icu_sources_data.py-Decouple-from-Mozilla-build-system.patch
+Patch0010:      icu_sources_data-Write-command-output-to-our-stderr.patch
+Patch0011:      tests-For-tests-that-are-skipped-on-64-bit-mips64-is-also.patch
+
+# Build fixes - https://hg.mozilla.org/mozilla-central/rev/ca36a6c4f8a4a0ddaa033fdbe20836d87bbfb873
+Patch12:        emitter.patch
+Patch13:        emitter_test.patch
+Patch14:        init_patch.patch
+
+# Patches from Fedora firefox package:
+Patch26:        build-icu-big-endian.patch
+
+# aarch64 fixes for -O2
+Patch30:        Save-x28-before-clobbering-it-in-the-regex-compiler.patch
+Patch31:        Save-and-restore-non-volatile-x28-on-ARM64-for-generated-unboxed-object-constructor.patch
+Patch32:	firefox-60.2.2-add-riscv64.patch
+Patch33:	mozjs-52.8.1-fix-crash-on-startup.patch
+
 BuildRequires:	pkgconfig(icu-i18n)
 BuildRequires:	pkgconfig(nspr)
 BuildRequires:	pkgconfig(libffi)
@@ -37,6 +63,7 @@ with only mild differences from the published standard.
 %package -n %{libmozjs}
 Provides:	mozjs%{major} = %{EVRD}
 Summary:	JavaScript engine library
+Obsoletes:	lib64mozjs52.7
 
 %description -n %{libmozjs}
 JavaScript is the Netscape-developed object scripting language used in millions
@@ -55,8 +82,40 @@ documentation for %{name}. If you like to develop programs using %{name},
 you will need to install %{name}-devel.
 
 %prep
-%autosetup -p1 -n mozjs-%{version} -a 10
-%config_update
+%setup -q -n firefox-%{version}/js/src -a 10
+
+pushd ../..
+%patch0001 -p1
+%patch0002 -p1
+%patch0003 -p1
+%patch0008 -p1
+%patch0009 -p1
+%patch0010 -p1
+%patch0011 -p1
+
+%patch12 -p1
+%patch13 -p1
+%patch14 -p1
+
+# Patch for big endian platforms only
+%if 0%{?big_endian}
+%patch26 -p1 -b .icu
+%endif
+
+# aarch64 -O2 fixes
+%ifarch aarch64
+%patch30 -p1
+%patch31 -p1
+%endif
+%patch32 -p1
+%patch33 -p1
+
+# make sure we don't ever accidentally link against bundled security libs
+rm -rf security/
+popd
+
+# Remove zlib directory (to be sure using system version)
+rm -rf ../../modules/zlib
 
 #rm -rf nsprpub
 #cd config/external/
@@ -84,62 +143,58 @@ export CC=%{__cc}
 export CXX=%{__cxx}
 export LD=ld.bfd
 
-# Kind of, but not 100%, like autoconf...
-mkdir build1
-cd build1
-../js/src/configure \
-	--prefix=%{_prefix} \
-	--libdir=%{_libdir} \
-	--disable-readline \
-	--disable-debug \
-	--disable-debug-symbols \
-	--enable-shared-js \
-	--enable-posix-nspr-emulation \
-	--enable-optimize="-O3" \
-	--disable-jemalloc \
-	--without-intl-api \
-	--with-system-bz2 \
-	--with-system-icu \
-	--with-system-jpeg \
-	--with-system-libevent \
-	--with-system-libvpx \
-	--with-system-nss \
-	--with-system-png \
-	--with-system-zlib
+%configure \
+  --without-system-icu \
+  --enable-posix-nspr-emulation \
+  --with-system-zlib \
+  --enable-tests \
+  --disable-strip \
+  --with-intl-api \
+  --enable-readline \
+  --enable-shared-js \
+  --disable-optimize \
+  --enable-pie \
+  --disable-jemalloc \
+
+%if 0%{?big_endian}
+echo "Generate big endian version of config/external/icu/data/icud58l.dat"
+pushd ../..
+  ./mach python intl/icu_sources_data.py .
+  ls -l config/external/icu/data
+  rm -f config/external/icu/data/icudt*l.dat
+popd
+%endif
+
 
 %make_build
 
 %install
-cd build1
 %make_install
 
-chmod a-x  %{buildroot}%{_libdir}/pkgconfig/*.pc
+# Fix permissions
+chmod -x %{buildroot}%{_libdir}/pkgconfig/*.pc
 
-# Do not install binaries or static libraries
-rm -f %{buildroot}%{_libdir}/*.a %{buildroot}%{_bindir}/js*
+# Remove unneeded files
+rm %{buildroot}%{_bindir}/js%{major}-config
+rm %{buildroot}%{_libdir}/libjs_static.ajs
 
-# Install files, not symlinks to build directory
-pushd %{buildroot}%{_includedir}
-    for link in $(find . -type l); do
-	header="$(readlink $link)"
-	rm -f $link
-	cp -p $header $link
-    done
-popd
-cp -p js/src/js-config.h %{buildroot}%{_includedir}/mozjs-%{major}
-
-# Remove unneeded files, this files is 500MiB+ of size
-rm -rf %{buildroot}%{_libdir}/*.ajs
+# Rename library and create symlinks, following fix-soname.patch
+mv %{buildroot}%{_libdir}/libmozjs-%{major}.so \
+   %{buildroot}%{_libdir}/libmozjs-%{major}.so.0.0.0
+ln -s libmozjs-%{major}.so.0.0.0 %{buildroot}%{_libdir}/libmozjs-%{major}.so.0
+ln -s libmozjs-%{major}.so.0 %{buildroot}%{_libdir}/libmozjs-%{major}.so
 
 %check
 # Some tests will fail
 tests/jstests.py -d -s --no-progress ../../js/src/js/src/shell/js || :
 
+%files
+%{_bindir}/js60
+
 %files -n %{libmozjs}
-%{_libdir}/*.so
+%{_libdir}/libmozjs-60.so.%{majorlib}*
 
 %files -n %{libmozjs_devel}
-%doc README
-%license LICENSE
+%{_libdir}/libmozjs-60.so
 %{_libdir}/pkgconfig/*.pc
 %{_includedir}/mozjs-%{major}

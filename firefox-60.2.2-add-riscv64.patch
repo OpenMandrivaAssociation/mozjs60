@@ -13,24 +13,24 @@ index 83b8d7055..200ea47e5 100644
          canonical_cpu = 'sh4'
          endianness = 'little'
 diff --git a/js/src/jit/AtomicOperations.h b/js/src/jit/AtomicOperations.h
-index a8970b0d3..41503c81e 100644
+index 3501e65b8..fda0b1487 100644
 --- a/js/src/jit/AtomicOperations.h
 +++ b/js/src/jit/AtomicOperations.h
-@@ -387,6 +387,8 @@ AtomicOperations::isLockfreeJS(int32_t size)
- # include "jit/none/AtomicOperations-feeling-lucky.h"
+@@ -393,6 +393,8 @@ inline bool AtomicOperations::isLockfreeJS(int32_t size) {
+ #include "jit/none/AtomicOperations-feeling-lucky.h"
  #elif defined(__s390__) || defined(__s390x__)
- # include "jit/none/AtomicOperations-feeling-lucky.h"
+ #include "jit/none/AtomicOperations-feeling-lucky.h"
 +#elif defined(__riscv)
-+# include "jit/none/AtomicOperations-feeling-lucky.h"
++#include "jit/none/AtomicOperations-feeling-lucky.h"
  #else
- # error "No AtomicOperations support provided for this platform"
+ #error "No AtomicOperations support provided for this platform"
  #endif
 diff --git a/js/src/jit/none/AtomicOperations-feeling-lucky.h b/js/src/jit/none/AtomicOperations-feeling-lucky.h
-index da5722843..288b45313 100644
+index c0b436995..f0e2d7150 100644
 --- a/js/src/jit/none/AtomicOperations-feeling-lucky.h
 +++ b/js/src/jit/none/AtomicOperations-feeling-lucky.h
-@@ -79,6 +79,14 @@
- #  define GNUC_COMPATIBLE
+@@ -80,6 +80,14 @@
+ #define GNUC_COMPATIBLE
  #endif
  
 +#ifdef __riscv
