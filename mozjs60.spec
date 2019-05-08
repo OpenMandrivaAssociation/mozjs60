@@ -83,6 +83,7 @@ you will need to install %{name}-devel.
 
 %prep
 %setup -q -n firefox-%{version}/js/src -a 10
+%config_update
 
 pushd ../..
 %patch0001 -p1
