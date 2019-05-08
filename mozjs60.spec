@@ -140,8 +140,8 @@ export AUTOCONF="`pwd`"/ac213bin/bin/autoconf
 export CFLAGS="%{optflags} -fuse-ld=bfd"
 export CXXFLAGS="$CFLAGS"
 export LDFLAGS="$CFLAGS"
-export CC=%{__cc}
-export CXX=%{__cxx}
+export CC=gcc
+export CXX=g++
 export LD=ld.bfd
 
 %configure \
