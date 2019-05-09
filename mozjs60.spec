@@ -151,6 +151,7 @@ export LD=ld.bfd
   --disable-strip \
   --with-intl-api \
   --enable-readline \
+  --enable-optimize="-O3" \
   --enable-shared-js \
   --disable-optimize \
   --enable-pie \
