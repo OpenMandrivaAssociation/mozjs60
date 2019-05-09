@@ -17,7 +17,7 @@
 Summary:	JavaScript interpreter and libraries
 Name:		mozjs60
 Version:	60.6.3
-Release:	1
+Release:	2
 License:	MPLv2.0 and BSD and GPLv2+ and GPLv3+ and LGPLv2.1 and LGPLv2.1+
 URL:		https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Releases/%{major}
 Source0:        https://ftp.mozilla.org/pub/firefox/releases/%{version}esr/source/firefox-%{version}esr.source.tar.xz
@@ -63,7 +63,6 @@ with only mild differences from the published standard.
 %package -n %{libmozjs}
 Provides:	mozjs%{major} = %{EVRD}
 Summary:	JavaScript engine library
-Obsoletes:	lib64mozjs52.7
 
 %description -n %{libmozjs}
 JavaScript is the Netscape-developed object scripting language used in millions
